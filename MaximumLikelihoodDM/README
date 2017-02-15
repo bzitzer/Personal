@@ -1,1 +1,39 @@
 DM Method based off of the MAGIC full likelihood method using TMinuit.
+
+Instructions for use:
+1. Run VEGAS stages 1 to 6 as normal. 
+2. Start ROOT in directory with rootlogon.C 
+   > .L dumpStg6Results_wZnCorr.C
+   > dumpStg6Results_wZnCorr(<inFile>,<outFile>, <nEvents>,<useRBM>,<theta2Cut>, <NoFromStg5>,<Stg5Path>)
+   Where:
+      string inFile // Stage 6 ROOT results file
+      string outFile // ascii file containing event list
+      int nEvents // number of events dumped into file (0, default uses all events)
+      bool useRBM // if set to 'true' will use Crescent bg with zenith correction ('RBM' here is a bit of a misnomer)
+                  // if set to 'false' will use reflected regions
+      double theta2Cut // theta^2 cut 
+      bool NoFromStg5 // if set to 'true' will get NSB values from stage 5 file instead of stage 6 file (bug in v251 of VEGAS putting the wrong NSB values in results file)
+      string Stg5Path // Path to Stage 5 files (stg 5 files should be named as <Stg5Path>/<runNum>.stg5.root
+      
+   This puts events with energy, positions, etc. from stage 6 into an ascii file which is used in Alex's event weighting and the maximum likelihood
+3. > .L dumpEATextInput.C
+   > dumpEATextInput(string InFile,string configPath,bool useMCE = 0, bool testMode = 0,bool useOlder = 0)
+   Where:
+      string InFile // ascii file created with dumpStg6Results_wZnCorr.C
+      string configPath // Path to EA files
+      bool useMCE // use MC energies instead of Reconstructed energies. (Should be set to 'true') 
+      bool testMode // use only the first 10000 events. (Should be set to 'false')
+      bool useOlder // use an older iteration of dumpStg6Results (should be set to 'false') 
+4. > .L dumpBiasTextInput.C
+   >  dumpBiasTextInput(string InFile,string dir,string configDir,bool testMode = 0,bool useOlder = 0)
+   Options same as for step 3.
+   
+5. Process simulations with zenith and epoch (v4,v5 or v6) closely matching your data set through stages 1-4 of VEGAS as normal.
+6. Process sims though stage 5 with the combined tree option
+7. For each simulation file:
+   > .L dumpPSFHist.C
+   > dumpPSFHist(string inFile,string outFile,bool doNorm = false)
+   Where: 
+      string InFile // ascii file created with dumpStg6Results_wZnCorr.C
+      string outFile // ascii out file
+      bool doNorm // normalize histograms (should be set to false)
