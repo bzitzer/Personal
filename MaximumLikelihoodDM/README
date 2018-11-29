@@ -37,3 +37,31 @@ Instructions for use:
       string InFile // ascii file created with dumpStg6Results_wZnCorr.C
       string outFile // ascii out file
       bool doNorm // normalize histograms (should be set to false)
+
+8. The PSF should be convolved with the DM profile:
+   > .L calcJFactor_energy.cpp+
+   > calcJFactor_energy(string outFile,double thCut)
+   Where:
+      string outFile // root file which contains histograms and J profile convolved with PSF as a function of energy
+      double thCut // Theta cut (note, not theta^2)
+   To change the DM profile parameters, edit the code in lines between 544 and 549 for a generalized NFW (or Zhao) profile.
+  
+ 9. Computing DM limits for a single dwarf:
+   > .L ZitzTMinuitDM.cpp+
+   > ZitzTMinuitDM(string inEventFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_eventList_pass5f_wZnCorr.txt",
+		   string inEAFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_eventList_pass5f_stg5noise_nZnCorr.txt.mce",
+		   string inJFactorFile = "JPSFtables_alldwarfs/integratedJconvPSF_Seg1.txt",
+		   string dispPath = "/raid/reedbuck/bzitzer/Pass5f/segue1_bias/",
+		   string outRootFile = "segue_LLDM_outFile.root",dwarf_t dwarf = segue_1)
+   Where: 
+      string inEventFile // Ascii event file list made in step 2
+      string inEAFile // Ascii EA file made in step 3
+      string inJFactorFile // root file with J profiles convolved with PSF computed in step 8 (note that this only 
+                              takes a single file with a single simulation file)
+      string dispPath // Path to directory with energy bias for each run, computed in step 4
+      string outRootFile // output root file for keeping likelihood as a function of <sigma nu>, one for each mass as TGraph objects
+      dwarf_t dwarf // enumerated type for each dwarf galaxy, options are: segue_1,draco,ursa_minor,bootes and crab (crab only for testing purposes!)
+
+   Note: to change annilhation channel, edit line 59 of the code to change decay_t to another option. 
+         decay_t is another enumerated type which defines the channel. options are: WW, ZZ, bbar, tt, ee and uu for W and Z bosons, 
+         b quarks, tau leptons, electrons and muons, respectively. 
