@@ -2,7 +2,8 @@
 Steps for using combined runs method in VEGAS: 
 1. Download runs and run VEGAS stages 1-5 as normal. 
 2. Run vaStage6 on each run individually in batch mode for both ON and OFF runs. 
-  - The script RunVegasStg6Inv.bash can do this. The paths may have to be changed, as well as the configuration files. 
+  - The script RunVegasStg6Inv.bash can do this. It is optional if you'd rather use your own scripts, but be sure to rename and keep all the results files! 
+  - The paths may have to be changed, as well as the configuration files, as it it set up for Ben's machines at McGill.  
   - Remember to rename the stage 6 results files after each time stage 6 is run. (e.g. results_<run number>_s6.root)
   - If you want to use modified Li&Ma on the matched runs, you must use the option in stage 6 (-RBM_UseModifiedLiMa=1)
   - Info on modified Li&Ma here: https://veritas.sao.arizona.edu/wiki/images/9/93/Zitz_systematic_bgmemo.pdf
