@@ -19,7 +19,8 @@ Steps for using combined runs method in VEGAS:
     
 4. Start root in the $VEGAS/macros or $VEGAS/resultsExtractor/macros directory, with the combineMatchedRuns.cpp in the directory
 5. Compile the macro: 
-    - > combinedMatchedRuns.cpp+
+    - > .L combineMatchedRuns.cpp+
+    - >  combineMatchedRuns("Match.txt")
 6. Run the macro, with the ascii file created in step 3 as the input. 
     - The option exists to use modifed Li&Ma instead of Li&Ma 17 to calculate significance, if it was run on the stage 6 files first in step 2.
     - Default is Li&Ma 17.
