@@ -32,15 +32,15 @@
 //#include "readAlexJFactor.cpp"
 #include "TMinuit.h"
 
-bool unfoldEnergy = 1;
+bool unfoldEnergy = 1; // flag to use if to use energy bias to unfold energy. If set to '0', then energy dispersion will not be used.
 
-bool testMode = 0;
+bool testMode = 0; // only look at the first 10000 events. 
 
-bool expectedLimit = 0;
+bool expectedLimit = 0; // use a subset of the background events as 'on' events, to compute an expected limit, so you don't have to use the 'on' data.
 
 const int np = 30000;
 
-const int nBins = 100;
+const int nBins = 100; // number of bins to be used in the background, signal and on event histograms. 
 
 double binEdges[nBins+1];
 
@@ -85,6 +85,13 @@ void ZitzTMinuitDM(string inEventFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_ev
 		   string dispPath = "/raid/reedbuck/bzitzer/Pass5f/segue1_bias/",
 		   string outRootFile = "segue_LLDM_outFile.root",dwarf_t dwarf = segue_1)
 {
+  // Main function of the program. 
+	// string inEventFile - produced by dumpStg6Results.cpp or dumpStg6Results_wZnCorr.cpp macros
+	// string inEAFile - 'effective area' file produced by dumpEATextInput.C macro 
+	// string inJFactorFile - 'J factor' file produced by calcJFactor_energy.cpp macro
+	// string disPath - path that contains the energy dispersion for each run. Produced by dumpBiasTextInput.C macro
+	// string outRootFile - output ROOT file containing results as TGraph and histogram objects. 
+	// dwarf_t dwarf - enumerated type which defines the dwarf galaxy to be analyzed. Defined in ZitzMaxLike_v2.h. 
   // intial steps. Getting J-factor and DM spectra.
   eaFile = inEAFile;
   vector<double> m_vals;
@@ -108,7 +115,7 @@ void ZitzTMinuitDM(string inEventFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_ev
   */
   
   TFile* f = new TFile(inJFactorFile.c_str(),"READ");
-  jProfile = (TGraph*)f->Get("gConvJvE");
+  jProfile = (TGraph*)f->Get("gConvJvE"); // Graph of energy vs. J-profile convolved with PSF integrated over Region of interest (ROI).  
   //jProfile = readIntJFactorFile(inJFactorFile,dwarf);
 
   // J profile for GC projections:
@@ -137,7 +144,7 @@ void ZitzTMinuitDM(string inEventFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_ev
   double w;
   double w_avg;
   double dE;
-  // Range of mass values:
+  // Range of WIMP mass values:
   // dwarf galaxies:
    
   double m_lower = 100; // GeV
@@ -176,9 +183,9 @@ void ZitzTMinuitDM(string inEventFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_ev
   vector<double> LT;
 
   cout << "Reading event file.. ";
-  TTree* tEv = (TTree*)readEventFile(inEventFile.c_str(),segue_1);
+  TTree* tEv = (TTree*)readEventFile(inEventFile.c_str(),segue_1); // event file put into a ROOT tree object. 
   TGraphAsymmErrors* gEA = getEffectiveArea(inEAFile.c_str(),
-					    0,expTot);
+					    0,expTot); // getting the effective area, run averaged. (Run '0')
   if( tEv == NULL )
     {
       cout << "problem with events tree!" << endl;
@@ -361,7 +368,7 @@ void ZitzTMinuitDM(string inEventFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_ev
     hNon->Scale(NonTot/norm);
 
   //return;
-
+  // Next lines define TMinuit object to do the minimization of likelihood and define the range of the values for the fit. 
   TMinuit* t = new TMinuit(5);
   t->SetFCN(fcn);
   int ierflg;
@@ -469,9 +476,10 @@ void ZitzTMinuitDM(string inEventFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_ev
   l0->Draw("same");
   return;
   */
-
+	// Main loop. For each mass value, finds minimal value of <sig nu> and assuming it's not signifigant, calculates a limit. 
   for(int i=0; i<m_vals.size(); i++)
     {
+	  // resetting things from previous loop: 
       t->mnparm(0,"b    ",b_null,0.1 ,0.0,1e7,ierflg);
       t->mnparm(1,"Mass ",m_vals.at(i),1e-3 ,
 		m_vals.at(i)*0.9,m_vals.at(i)*1.1,ierflg);
@@ -481,13 +489,14 @@ void ZitzTMinuitDM(string inEventFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_ev
       t->FixParameter(1);
       //t->SetErrorDef(3.84/2);
       t->SetErrorDef(2.71/2);
+	  // tell tminuit to do the minimalization: 
       t->mnexcm("MIGRAD", arglist ,2,ierflg);
       cout << "Error flag: " << ierflg << endl;
-
+	// Getting results:
       t->GetParameter(0,b_min,b_err);
       //t->GetParameter(1,index_min,index_err);
       t->GetParameter(2,signu_min,signu_err);
-      gContour[i] = (TGraph*)t->Contour(40,0,2);
+      gContour[i] = (TGraph*)t->Contour(40,0,2); // getting error contour 
       //  if(gContour[i] == NULL){ return; }
       par_min[0] = b_min;
       par_min[1] = m_vals.at(i);
@@ -496,7 +505,7 @@ void ZitzTMinuitDM(string inEventFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_ev
       par_min[4] = NoffTot;
       fcn(npar,gin,loglmin,par_min,ierflg);
       cout << "NULL logL: " << logl0 << " Minimized logL: " << loglmin << endl;
-  
+  	// Calc TS value:
       TS = sqrt(-2*(loglmin - logl0));
       if(TMath::IsNaN(TS)){ TS = 0.0; }
       cout << "----------------" << endl;
@@ -526,6 +535,7 @@ void ZitzTMinuitDM(string inEventFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_ev
       if(gContour[i] != NULL)
 	{
 	  cout << TMath::MaxElement(gContour[i]->GetN(),gContour[i]->GetY()) << endl;
+	      // limit defined as the maximum of the error contour
 	  gLimit->SetPoint(m,m_vals.at(i),TMath::MaxElement(gContour[i]->GetN(),gContour[i]->GetY()));
 	  m++;
 	}
@@ -558,7 +568,7 @@ void ZitzTMinuitDM(string inEventFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_ev
       //cout << " LL check: " << gLLcheck->GetY()[i] << endl;
     }
 
-  
+  // Plotting final results:
   TCanvas* c0 = new TCanvas("c0","c0",40,40,700,500);
   c0->SetLogx(1);
   gbmin->GetXaxis()->SetTitle("Mass [GeV]");
@@ -609,7 +619,7 @@ void ZitzTMinuitDM(string inEventFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_ev
   cout << "Writing results to file: " << outRootFile.c_str() << endl;
   ostringstream os1[m_vals.size()];
   ostringstream os2[m_vals.size()];
-
+// writting results to file: 
   TFile* fOut = new TFile(outRootFile.c_str(),"RECREATE");
   for( int i=0; i<m_vals.size(); i++ )
     {
@@ -641,7 +651,7 @@ void ZitzTMinuitDM(string inEventFile = "/raid/reedbuck/bzitzer/Pass5f/segue1_ev
 
 void fcn(int &npar, double *gin, double &f, double *par, int iflag)
 {
-
+// TMinuit needs a function to minimize. This function defines the liklihood, given all the necessary inputs. 
   double logl  = 0;
   double b     = par[0];
   double M     = par[1];
@@ -710,6 +720,7 @@ void fcn(int &npar, double *gin, double &f, double *par, int iflag)
 
 TH1D* calc_signal(double *par)
 {
+	// Function that calcultes what a gamma-ray spectrum would look like after going through response functions, etc. given mass and cross section
   double b = par[0];
   double M = par[1];
   double sig_nu = par[2];
@@ -833,6 +844,8 @@ TH1D* calc_signal(double *par)
 
 TH2D* readPPP4DMFile(vector<double> &m_vals,decay_t decay,string inSpecFile)
 {
+	// reads the PPP4 DM spectral file and gets single gamma-ray annihilation spectrum for a mass and annilhilation channel ('decay' is a misnomer). 
+	// decay_t is an enumerated type, defined in ZitzMaxLike_v2.h. 
   double m,x;
   double eL,eR,e,muL,muR,mu,tauL,tauR,tau,q,c,b,t,WL,WT,W,ZL,ZT,Z,g,gamma,h,NuE,NuMu,NuTau,Ve,VMu,VTau;
   ifstream in(inSpecFile.c_str());
@@ -978,7 +991,7 @@ TH2D* readPPP4DMFile(vector<double> &m_vals,decay_t decay,string inSpecFile)
 
 TGraphAsymmErrors* plotLimitsAlexJSyst(string inFile)
 {
-
+// Plots Alex G.S.'s results for a cross check. 
   ifstream in(inFile.c_str());
   char str[300];
   in.getline(str,300);
@@ -1091,6 +1104,7 @@ TGraph* readIntJFactorFile(string inFile,dwarf_t dwarf)
 
 TH2D* readAlexJFactor(string inFile, string enBinFile, string thBinFile)
 {
+	// Reads Alex G.S.'s results to plot for a cross check
   ifstream in(inFile.c_str());
   if(!in.is_open())
     {
@@ -1187,6 +1201,7 @@ TGraph* getAlexJFactor1D(string inFile, string enBinFile,
 
 void runMultiTMinuitDM(string inFileList,string inEAFile,string inJFactorFile,string dispPath)
 {
+	// Runs several simulted files in a batch mode. Needs to be edited depending intended use. 
   gROOT->SetBatch(1);
   const int nFiles = 100;
   ostringstream os[nFiles];
