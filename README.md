@@ -1,2 +1,1 @@
-# DM-Aspen
-Repository for material related to ongoing VERITAS analysis related to dark matter and astroparticle projects.
+Ben Zitzer's Personal github repository. Most related to VERITAS Astroparticle projects. 
