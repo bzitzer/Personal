@@ -2,3 +2,6 @@ In grad school, I took a course in computational physics at Purdue. I have rewri
 In the 1D version of the code has the particle (represented initially as a gaussian packet), encounters a 1D potential barrier at x=0. 
 Part of the wave will reflect and part will be transmitted. The percentages are printed in the upper left-hand corner. 
 The code uses a leap-frog algorithm. 
+Several images are taken at multiple timesteps and makes a movie of the images using cv2 in AVI format. 
+
+
